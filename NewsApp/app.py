@@ -4,6 +4,7 @@ from flask import Flask, jsonify, render_template
 import requests
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 app = Flask(__name__)
 
@@ -105,24 +106,41 @@ def _clean(text):
     return text.strip()
 
 
+def fetch_feed(source_name, url):
+    try:
+        resp = requests.get(url, timeout=8, headers={"User-Agent": "Mozilla/5.0 (compatible; NewsApp/1.0)"})
+        if resp.status_code == 200:
+            # fix encoding for Hebrew sites
+            if resp.encoding and resp.encoding.lower() in ("iso-8859-1", "windows-1252"):
+                resp.encoding = resp.apparent_encoding
+            return parse_rss(resp.text, source_name)
+    except Exception:
+        pass
+    return []
+
+
 def fetch_category(category, feeds):
     articles = []
-    for source_name, url in feeds:
-        try:
-            resp = requests.get(url, timeout=8, headers={"User-Agent": "NewsApp/1.0"})
-            if resp.status_code == 200:
-                articles.extend(parse_rss(resp.text, source_name))
-        except Exception:
-            pass
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        futures = {ex.submit(fetch_feed, name, url): name for name, url in feeds}
+        for f in as_completed(futures, timeout=12):
+            try:
+                articles.extend(f.result())
+            except Exception:
+                pass
     return articles
 
 
 def refresh_cache():
     while True:
-        for category, feeds in FEEDS.items():
-            articles = fetch_category(category, feeds)
+        def _fetch_one(cat_feeds):
+            cat, feeds = cat_feeds
+            articles = fetch_category(cat, feeds)
             with cache_lock:
-                cache[category] = {"articles": articles, "updated": datetime.now(timezone.utc).isoformat()}
+                cache[cat] = {"articles": articles, "updated": datetime.now(timezone.utc).isoformat()}
+
+        with ThreadPoolExecutor(max_workers=4) as ex:
+            list(ex.map(_fetch_one, FEEDS.items()))
         time.sleep(CACHE_TTL)
 
 
