@@ -10,31 +10,35 @@ app = Flask(__name__)
 
 FEEDS = {
     "ישראל": [
-        ("Ynet", "https://www.ynet.co.il/Integration/StoryRss2.xml"),
-        ("Walla", "https://rss.walla.co.il/feed/1"),
-        ("מאקו", "https://rss.mako.co.il/rss/31750a2610f26110VgnVCM1000005201000aRCRD.xml"),
-        ("N12", "https://www.mako.co.il/rss/news-military.xml"),
+        ("Ynet חדשות", "https://www.ynet.co.il/Integration/StoryRss2.xml"),
+        ("Walla חדשות", "https://rss.walla.co.il/feed/1"),
+        ("מאקו N12", "https://www.mako.co.il/rss/news.xml"),
+        ("הארץ", "https://www.haaretz.co.il/cmlink/1.1660017"),
+    ],
+    "פוליטיקה ישראלית": [
+        ("Ynet פוליטי", "https://www.ynet.co.il/Integration/StoryRss2030.xml"),
+        ("Walla פוליטי", "https://rss.walla.co.il/feed/6"),
+        ("BBC Politics", "http://feeds.bbci.co.uk/news/politics/rss.xml"),
+        ("Politico", "https://www.politico.com/rss/politics08.xml"),
     ],
     "עולם": [
         ("BBC World", "http://feeds.bbci.co.uk/news/world/rss.xml"),
         ("Al Jazeera", "https://www.aljazeera.com/xml/rss/all.xml"),
-        ("Ynet עולם", "https://www.ynet.co.il/Integration/StoryRss6.xml"),
+        ("Guardian World", "https://www.theguardian.com/world/rss"),
+        ("Ynet עולם", "https://www.ynet.co.il/Integration/StoryRss377.xml"),
     ],
-    "טכנולוגיה": [
-        ("Ynet טכנולוגיה", "https://www.ynet.co.il/Integration/StoryRss542.xml"),
-        ("TechCrunch", "https://techcrunch.com/feed/"),
-        ("The Verge", "https://www.theverge.com/rss/index.xml"),
-        ("Wired", "https://www.wired.com/feed/rss"),
-    ],
-    "מדע": [
-        ("Science Daily", "https://www.sciencedaily.com/rss/all.xml"),
-        ("NASA", "https://www.nasa.gov/rss/dyn/breaking_news.rss"),
-        ("Ynet מדע", "https://www.ynet.co.il/Integration/StoryRss3462.xml"),
-    ],
-    "עסקים וכלכלה": [
+    "כלכלה": [
         ("Ynet כלכלה", "https://www.ynet.co.il/Integration/StoryRss3.xml"),
         ("Walla כלכלה", "https://rss.walla.co.il/feed/2"),
         ("BBC Business", "http://feeds.bbci.co.uk/news/business/rss.xml"),
+        ("Reuters Business", "https://feeds.reuters.com/reuters/businessNews"),
+    ],
+    "טכנולוגיה": [
+        ("Ynet טכנולוגיה", "https://www.ynet.co.il/Integration/StoryRss542.xml"),
+        ("Walla טכנולוגיה", "https://rss.walla.co.il/feed/4"),
+        ("TechCrunch", "https://techcrunch.com/feed/"),
+        ("The Verge", "https://www.theverge.com/rss/index.xml"),
+        ("Wired", "https://www.wired.com/feed/rss"),
     ],
     "ספורט": [
         ("Ynet ספורט", "https://www.ynet.co.il/Integration/StoryRss5.xml"),
@@ -42,28 +46,33 @@ FEEDS = {
         ("BBC Sport", "http://feeds.bbci.co.uk/sport/rss.xml"),
         ("ESPN", "https://www.espn.com/espn/rss/news"),
     ],
-    "בריאות": [
-        ("Ynet בריאות", "https://www.ynet.co.il/Integration/StoryRss3458.xml"),
-        ("BBC Health", "http://feeds.bbci.co.uk/news/health/rss.xml"),
-        ("WHO", "https://www.who.int/rss-feeds/news-releases.xml"),
-    ],
-    "בידור": [
+    "בידור ותרבות": [
         ("Ynet בידור", "https://www.ynet.co.il/Integration/StoryRss4.xml"),
         ("Walla בידור", "https://rss.walla.co.il/feed/7"),
         ("BBC Entertainment", "http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml"),
+        ("Rolling Stone", "https://www.rollingstone.com/feed/"),
     ],
-    "מדיניות ופוליטיקה": [
-        ("Ynet פוליטי", "https://www.ynet.co.il/Integration/StoryRss6.xml"),
-        ("BBC Politics", "http://feeds.bbci.co.uk/news/politics/rss.xml"),
-        ("Politico", "https://www.politico.com/rss/politics08.xml"),
+    "בריאות": [
+        ("Ynet בריאות", "https://www.ynet.co.il/Integration/StoryRss3458.xml"),
+        ("Walla בריאות", "https://rss.walla.co.il/feed/5"),
+        ("BBC Health", "http://feeds.bbci.co.uk/news/health/rss.xml"),
+        ("WHO", "https://www.who.int/rss-feeds/news-releases.xml"),
+    ],
+    "מדע וטבע": [
+        ("Ynet מדע", "https://www.ynet.co.il/Integration/StoryRss3462.xml"),
+        ("Science Daily", "https://www.sciencedaily.com/rss/all.xml"),
+        ("NASA", "https://www.nasa.gov/rss/dyn/breaking_news.rss"),
+        ("New Scientist", "https://www.newscientist.com/feed/home/"),
     ],
     "סביבה ואקלים": [
         ("BBC Environment", "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml"),
         ("Guardian Environment", "https://www.theguardian.com/environment/rss"),
+        ("Climate Home News", "https://www.climatechangenews.com/feed/"),
     ],
     "חינוך": [
         ("BBC Education", "http://feeds.bbci.co.uk/news/education/rss.xml"),
         ("Times Higher Education", "https://www.timeshighereducation.com/news/rss.xml"),
+        ("EdSurge", "https://www.edsurge.com/news.rss"),
     ],
 }
 
