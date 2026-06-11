@@ -8,56 +8,61 @@ import time
 app = Flask(__name__)
 
 FEEDS = {
+    "ישראל": [
+        ("Ynet", "https://www.ynet.co.il/Integration/StoryRss2.xml"),
+        ("Walla", "https://rss.walla.co.il/feed/1"),
+        ("מאקו", "https://rss.mako.co.il/rss/31750a2610f26110VgnVCM1000005201000aRCRD.xml"),
+        ("N12", "https://www.mako.co.il/rss/news-military.xml"),
+    ],
     "עולם": [
         ("BBC World", "http://feeds.bbci.co.uk/news/world/rss.xml"),
-        ("Reuters World", "https://feeds.reuters.com/reuters/worldNews"),
         ("Al Jazeera", "https://www.aljazeera.com/xml/rss/all.xml"),
+        ("Ynet עולם", "https://www.ynet.co.il/Integration/StoryRss6.xml"),
     ],
     "טכנולוגיה": [
+        ("Ynet טכנולוגיה", "https://www.ynet.co.il/Integration/StoryRss542.xml"),
         ("TechCrunch", "https://techcrunch.com/feed/"),
-        ("Ars Technica", "http://feeds.arstechnica.com/arstechnica/index"),
         ("The Verge", "https://www.theverge.com/rss/index.xml"),
         ("Wired", "https://www.wired.com/feed/rss"),
     ],
     "מדע": [
         ("Science Daily", "https://www.sciencedaily.com/rss/all.xml"),
         ("NASA", "https://www.nasa.gov/rss/dyn/breaking_news.rss"),
-        ("New Scientist", "https://www.newscientist.com/feed/home/"),
+        ("Ynet מדע", "https://www.ynet.co.il/Integration/StoryRss3462.xml"),
     ],
     "עסקים וכלכלה": [
+        ("Ynet כלכלה", "https://www.ynet.co.il/Integration/StoryRss3.xml"),
+        ("Walla כלכלה", "https://rss.walla.co.il/feed/2"),
         ("BBC Business", "http://feeds.bbci.co.uk/news/business/rss.xml"),
-        ("Reuters Business", "https://feeds.reuters.com/reuters/businessNews"),
-        ("Financial Times", "https://www.ft.com/rss/home/uk"),
     ],
     "ספורט": [
+        ("Ynet ספורט", "https://www.ynet.co.il/Integration/StoryRss5.xml"),
+        ("Walla ספורט", "https://rss.walla.co.il/feed/3"),
         ("BBC Sport", "http://feeds.bbci.co.uk/sport/rss.xml"),
         ("ESPN", "https://www.espn.com/espn/rss/news"),
-        ("Sky Sports", "https://www.skysports.com/rss/12040"),
     ],
     "בריאות": [
+        ("Ynet בריאות", "https://www.ynet.co.il/Integration/StoryRss3458.xml"),
         ("BBC Health", "http://feeds.bbci.co.uk/news/health/rss.xml"),
-        ("WebMD", "https://rss.webmd.com/rss/rss.aspx?RSSSource=RSS_PUBLIC"),
         ("WHO", "https://www.who.int/rss-feeds/news-releases.xml"),
     ],
     "בידור": [
+        ("Ynet בידור", "https://www.ynet.co.il/Integration/StoryRss4.xml"),
+        ("Walla בידור", "https://rss.walla.co.il/feed/7"),
         ("BBC Entertainment", "http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml"),
-        ("Rolling Stone", "https://www.rollingstone.com/feed/"),
-        ("Hollywood Reporter", "https://www.hollywoodreporter.com/feed/"),
     ],
     "מדיניות ופוליטיקה": [
+        ("Ynet פוליטי", "https://www.ynet.co.il/Integration/StoryRss6.xml"),
         ("BBC Politics", "http://feeds.bbci.co.uk/news/politics/rss.xml"),
-        ("Reuters Politics", "https://feeds.reuters.com/Reuters/PoliticsNews"),
         ("Politico", "https://www.politico.com/rss/politics08.xml"),
     ],
     "סביבה ואקלים": [
         ("BBC Environment", "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml"),
         ("Guardian Environment", "https://www.theguardian.com/environment/rss"),
-        ("Climate Home News", "https://www.climatechangenews.com/feed/"),
     ],
     "חינוך": [
         ("BBC Education", "http://feeds.bbci.co.uk/news/education/rss.xml"),
         ("Times Higher Education", "https://www.timeshighereducation.com/news/rss.xml"),
-        ("EdSurge", "https://www.edsurge.com/news.rss"),
     ],
 }
 
