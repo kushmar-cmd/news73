@@ -84,6 +84,8 @@ FEEDS = {
         ("Yale Environment", "https://e360.yale.edu/feed", True),
     ],
     "חינוך": [
+        ("כאן חינוך", "https://www.kan.org.il/rss/?catid=4", False),
+        ("Ynet חינוך", "https://www.ynet.co.il/Integration/StoryRss3459.xml", False),
         ("BBC Education", "http://feeds.bbci.co.uk/news/education/rss.xml", True),
         ("Times Higher Education", "https://www.timeshighereducation.com/news/rss.xml", True),
         ("EdSurge", "https://www.edsurge.com/news.rss", True),
