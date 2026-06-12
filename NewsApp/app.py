@@ -1,3 +1,4 @@
+import os
 import re
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
@@ -19,7 +20,7 @@ app = Flask(__name__)
 FEEDS = {
     "ישראל": [
         ("Ynet חדשות", "https://www.ynet.co.il/Integration/StoryRss2.xml", False),
-        ("Walla חדשות", "https://rss.walla.co.il/feed/1", False),
+        ("Walla ישראל", "https://rss.walla.co.il/feed/1", False),
         ("כאן חדשות", "https://www.kan.org.il/rss/", False),
         ("מאקו N12", "https://www.mako.co.il/rss/news.xml", False),
         ("הארץ", "https://www.haaretz.co.il/cmlink/1.1660017", False),
@@ -27,11 +28,11 @@ FEEDS = {
     ],
     "פוליטיקה ישראלית": [
         ("Ynet פוליטי", "https://www.ynet.co.il/Integration/StoryRss2030.xml", False),
-        ("Walla פוליטי", "https://rss.walla.co.il/feed/6", False),
         ("BBC Politics", "http://feeds.bbci.co.uk/news/politics/rss.xml", True),
         ("Politico", "https://www.politico.com/rss/politics08.xml", True),
     ],
     "עולם": [
+        ("Walla עולם", "https://rss.walla.co.il/feed/2", False),
         ("BBC World", "http://feeds.bbci.co.uk/news/world/rss.xml", True),
         ("Guardian World", "https://www.theguardian.com/world/rss", True),
         ("Reuters World", "https://feeds.reuters.com/reuters/worldNews", True),
@@ -39,7 +40,7 @@ FEEDS = {
     ],
     "כלכלה": [
         ("Ynet כלכלה", "https://www.ynet.co.il/Integration/StoryRss3.xml", False),
-        ("Walla כלכלה", "https://rss.walla.co.il/feed/2", False),
+        ("Walla כלכלה", "https://rss.walla.co.il/feed/3", False),
         ("גלובס כלכלה", "https://www.globes.co.il/rss/rss.aspx?f=502", False),
         ("גלובס שוק ההון", "https://www.globes.co.il/rss/rss.aspx?f=561", False),
         ("TheMarker", "https://www.themarker.com/rss/", False),
@@ -55,20 +56,18 @@ FEEDS = {
     ],
     "ספורט": [
         ("Ynet ספורט", "https://www.ynet.co.il/Integration/StoryRss5.xml", False),
-        ("Walla ספורט", "https://rss.walla.co.il/feed/3", False),
+        ("Walla ספורט", "https://rss.walla.co.il/feed/7", False),
         ("ספורט 5", "https://www.sport5.co.il/rss.aspx", False),
         ("BBC Sport", "http://feeds.bbci.co.uk/sport/rss.xml", True),
         ("ESPN", "https://www.espn.com/espn/rss/news", True),
     ],
     "בידור ותרבות": [
         ("Ynet בידור", "https://www.ynet.co.il/Integration/StoryRss4.xml", False),
-        ("Walla בידור", "https://rss.walla.co.il/feed/7", False),
         ("BBC Entertainment", "http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml", True),
         ("Rolling Stone", "https://www.rollingstone.com/feed/", True),
     ],
     "בריאות": [
         ("Ynet בריאות", "https://www.ynet.co.il/Integration/StoryRss3458.xml", False),
-        ("Walla בריאות", "https://rss.walla.co.il/feed/5", False),
         ("BBC Health", "http://feeds.bbci.co.uk/news/health/rss.xml", True),
         ("WHO", "https://www.who.int/rss-feeds/news-releases.xml", True),
     ],
@@ -234,4 +233,5 @@ def category_news(category):
 if __name__ == "__main__":
     t = threading.Thread(target=refresh_cache, daemon=True)
     t.start()
-    app.run(debug=False, port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=False, host="0.0.0.0", port=port)
