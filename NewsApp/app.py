@@ -8,11 +8,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-try:
-    from deep_translator import GoogleTranslator
-    TRANSLATE_AVAILABLE = True
-except ImportError:
-    TRANSLATE_AVAILABLE = False
+import urllib.parse
 
 app = Flask(__name__)
 
@@ -70,10 +66,9 @@ FEEDS = {
         ("Rolling Stone", "https://www.rollingstone.com/feed/", True),
     ],
     "בריאות": [
-        ("Ynet חדשות", "https://www.ynet.co.il/Integration/StoryRss2.xml", False),
-        ("ישראל היום", "https://www.israelhayom.co.il/rss.xml", False),
         ("BBC Health", "http://feeds.bbci.co.uk/news/health/rss.xml", True),
         ("WHO", "https://www.who.int/rss-feeds/news-releases.xml", True),
+        ("WebMD", "https://rss.webmd.com/rss/rss.aspx?RSSSource=RSS_PUBLIC", True),
     ],
     "מדע וטבע": [
         ("Ynet מדע", "https://www.ynet.co.il/Integration/StoryRss3462.xml", False),
@@ -89,8 +84,6 @@ FEEDS = {
         ("Yale Environment", "https://e360.yale.edu/feed", True),
     ],
     "חינוך": [
-        ("Ynet חדשות", "https://www.ynet.co.il/Integration/StoryRss2.xml", False),
-        ("הארץ", "https://www.haaretz.co.il/cmlink/1.1660017", False),
         ("BBC Education", "http://feeds.bbci.co.uk/news/education/rss.xml", True),
         ("Times Higher Education", "https://www.timeshighereducation.com/news/rss.xml", True),
         ("EdSurge", "https://www.edsurge.com/news.rss", True),
@@ -101,33 +94,20 @@ cache = {}
 cache_lock = threading.Lock()
 CACHE_TTL = 300  # 5 minutes
 
-_translator = None
-_translator_lock = threading.Lock()
-
-
-def get_translator():
-    global _translator
-    if not TRANSLATE_AVAILABLE:
-        return None
-    with _translator_lock:
-        if _translator is None:
-            try:
-                _translator = GoogleTranslator(source="auto", target="he")
-            except Exception:
-                pass
-    return _translator
-
 
 def translate_text(text):
     if not text:
         return text
-    t = get_translator()
-    if not t:
-        return text
     try:
-        return t.translate(text[:500]) or text
+        url = "https://translate.googleapis.com/translate_a/single"
+        params = {"client": "gtx", "sl": "en", "tl": "he", "dt": "t", "q": text[:500]}
+        resp = requests.get(url, params=params, timeout=5)
+        if resp.status_code == 200:
+            data = resp.json()
+            return "".join(part[0] for part in data[0] if part[0]) or text
     except Exception:
-        return text
+        pass
+    return text
 
 
 def parse_rss(xml_text, source_name, do_translate=False):
