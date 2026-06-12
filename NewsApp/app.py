@@ -40,7 +40,9 @@ FEEDS = {
     "כלכלה": [
         ("Ynet כלכלה", "https://www.ynet.co.il/Integration/StoryRss3.xml", False),
         ("Walla כלכלה", "https://rss.walla.co.il/feed/2", False),
-        ("גלובס", "https://www.globes.co.il/rss/rss.aspx?f=502", False),
+        ("גלובס כלכלה", "https://www.globes.co.il/rss/rss.aspx?f=502", False),
+        ("גלובס שוק ההון", "https://www.globes.co.il/rss/rss.aspx?f=561", False),
+        ("TheMarker", "https://www.themarker.com/rss/", False),
         ("BBC Business", "http://feeds.bbci.co.uk/news/business/rss.xml", True),
         ("Reuters Business", "https://feeds.reuters.com/reuters/businessNews", True),
     ],
@@ -79,7 +81,8 @@ FEEDS = {
     "סביבה ואקלים": [
         ("BBC Environment", "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml", True),
         ("Guardian Environment", "https://www.theguardian.com/environment/rss", True),
-        ("Climate Home News", "https://www.climatechangenews.com/feed/", True),
+        ("Reuters Environment", "https://feeds.reuters.com/reuters/environment", True),
+        ("Yale Environment", "https://e360.yale.edu/feed", True),
     ],
     "חינוך": [
         ("BBC Education", "http://feeds.bbci.co.uk/news/education/rss.xml", True),
