@@ -19,13 +19,6 @@ FEEDS = {
         ("הארץ", "https://www.haaretz.co.il/cmlink/1.1660017", False),
         ("ישראל היום", "https://www.israelhayom.co.il/rss.xml", False),
     ],
-    "פוליטיקה ישראלית": [
-        ("Ynet חדשות", "https://www.ynet.co.il/Integration/StoryRss2.xml", False),
-        ("ישראל היום", "https://www.israelhayom.co.il/rss.xml", False),
-        ("הארץ", "https://www.haaretz.co.il/cmlink/1.1660017", False),
-        ("BBC Politics", "http://feeds.bbci.co.uk/news/politics/rss.xml", True),
-        ("Politico", "https://www.politico.com/rss/politics08.xml", True),
-    ],
     "עולם": [
         ("Walla עולם", "https://rss.walla.co.il/feed/2", False),
         ("BBC World", "http://feeds.bbci.co.uk/news/world/rss.xml", True),
@@ -103,16 +96,15 @@ def translate_articles(articles):
     to_translate = [a for a in articles if a.get("translate")]
     if not to_translate:
         return
-    # Translate titles in parallel
     with ThreadPoolExecutor(max_workers=8) as ex:
-        futures = {ex.submit(translate_text, a["title"]): a for a in to_translate}
-        for f, a in futures.items():
+        title_futures = {ex.submit(translate_text, a["title"]): ("title", a) for a in to_translate}
+        desc_futures = {ex.submit(translate_text, a["desc"]): ("desc", a) for a in to_translate if a.get("desc")}
+        for f, (field, a) in {**title_futures, **desc_futures}.items():
             try:
-                result = f.result(timeout=8)
-                a["title"] = result
-                a["translate"] = False
+                a[field] = f.result(timeout=8)
             except Exception:
-                a["translate"] = False
+                pass
+            a["translate"] = False
 
 
 def _clean(text):
