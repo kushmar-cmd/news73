@@ -8,11 +8,8 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import urllib.parse
-
 app = Flask(__name__)
 
-# Sources marked True will have titles/descriptions translated to Hebrew
 FEEDS = {
     "ישראל": [
         ("Ynet חדשות", "https://www.ynet.co.il/Integration/StoryRss2.xml", False),
@@ -31,7 +28,6 @@ FEEDS = {
     ],
     "עולם": [
         ("Walla עולם", "https://rss.walla.co.il/feed/2", False),
-        ("Ynet חדשות", "https://www.ynet.co.il/Integration/StoryRss2.xml", False),
         ("BBC World", "http://feeds.bbci.co.uk/news/world/rss.xml", True),
         ("Guardian World", "https://www.theguardian.com/world/rss", True),
         ("Reuters World", "https://feeds.reuters.com/reuters/worldNews", True),
@@ -61,7 +57,6 @@ FEEDS = {
     ],
     "בידור ותרבות": [
         ("Ynet בידור", "https://www.ynet.co.il/Integration/StoryRss4.xml", False),
-        ("Walla בידור", "https://rss.walla.co.il/feed/1", False),
         ("BBC Entertainment", "http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml", True),
         ("Rolling Stone", "https://www.rollingstone.com/feed/", True),
     ],
@@ -72,13 +67,11 @@ FEEDS = {
     ],
     "מדע וטבע": [
         ("Ynet מדע", "https://www.ynet.co.il/Integration/StoryRss3462.xml", False),
-        ("כאן מדע", "https://www.kan.org.il/rss/", False),
         ("Science Daily", "https://www.sciencedaily.com/rss/all.xml", True),
         ("NASA", "https://www.nasa.gov/rss/dyn/breaking_news.rss", True),
         ("New Scientist", "https://www.newscientist.com/feed/home/", True),
     ],
     "סביבה ואקלים": [
-        ("Ynet סביבה", "https://www.ynet.co.il/Integration/StoryRss2.xml", False),
         ("BBC Environment", "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml", True),
         ("Guardian Environment", "https://www.theguardian.com/environment/rss", True),
         ("Yale Environment", "https://e360.yale.edu/feed", True),
@@ -101,13 +94,35 @@ def translate_text(text):
     try:
         url = "https://translate.googleapis.com/translate_a/single"
         params = {"client": "gtx", "sl": "en", "tl": "he", "dt": "t", "q": text[:500]}
-        resp = requests.get(url, params=params, timeout=5)
+        resp = requests.get(url, params=params, timeout=5,
+                            headers={"User-Agent": "Mozilla/5.0"})
         if resp.status_code == 200:
             data = resp.json()
             return "".join(part[0] for part in data[0] if part[0]) or text
     except Exception:
         pass
     return text
+
+
+def translate_articles(articles):
+    to_translate = [a for a in articles if a.get("translate")]
+    if not to_translate:
+        return
+    # Translate titles in parallel
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        futures = {ex.submit(translate_text, a["title"]): a for a in to_translate}
+        for f, a in futures.items():
+            try:
+                result = f.result(timeout=8)
+                a["title"] = result
+                a["translate"] = False
+            except Exception:
+                a["translate"] = False
+
+
+def _clean(text):
+    text = re.sub(r"<[^>]+>", "", text)
+    return text.strip()
 
 
 def parse_rss(xml_text, source_name, do_translate=False):
@@ -121,8 +136,8 @@ def parse_rss(xml_text, source_name, do_translate=False):
             desc = _clean(item.findtext("description", "").strip())[:200]
             pub = item.findtext("pubDate", "").strip()
             if title and link:
-                items.append({"title": title, "link": link, "desc": desc, "pub": pub,
-                              "source": source_name, "translate": do_translate})
+                items.append({"title": title, "link": link, "desc": desc,
+                               "pub": pub, "source": source_name, "translate": do_translate})
         if not items:
             for entry in root.findall(".//atom:entry", ns)[:6]:
                 title = entry.findtext("atom:title", "", ns).strip()
@@ -131,32 +146,17 @@ def parse_rss(xml_text, source_name, do_translate=False):
                 summary = _clean(entry.findtext("atom:summary", "", ns).strip())[:200]
                 pub = entry.findtext("atom:updated", "", ns).strip()
                 if title and link:
-                    items.append({"title": title, "link": link, "desc": summary, "pub": pub,
-                                  "source": source_name, "translate": do_translate})
+                    items.append({"title": title, "link": link, "desc": summary,
+                                   "pub": pub, "source": source_name, "translate": do_translate})
     except Exception:
         pass
     return items
 
 
-def translate_articles(articles):
-    """Translate titles of English articles in a background thread."""
-    t = get_translator()
-    if not t:
-        return
-    for a in articles:
-        if a.get("translate"):
-            a["title"] = translate_text(a["title"])
-            a["translate"] = False
-
-
-def _clean(text):
-    text = re.sub(r"<[^>]+>", "", text)
-    return text.strip()
-
-
 def fetch_feed(source_name, url, do_translate):
     try:
-        resp = requests.get(url, timeout=8, headers={"User-Agent": "Mozilla/5.0 (compatible; NewsApp/1.0)"})
+        resp = requests.get(url, timeout=8,
+                            headers={"User-Agent": "Mozilla/5.0 (compatible; NewsApp/1.0)"})
         if resp.status_code == 200:
             if resp.encoding and resp.encoding.lower() in ("iso-8859-1", "windows-1252"):
                 resp.encoding = resp.apparent_encoding
@@ -169,7 +169,7 @@ def fetch_feed(source_name, url, do_translate):
 def fetch_category(category, feeds):
     articles = []
     with ThreadPoolExecutor(max_workers=6) as ex:
-        futures = {ex.submit(fetch_feed, name, url, translate): name for name, url, translate in feeds}
+        futures = {ex.submit(fetch_feed, name, url, tr): name for name, url, tr in feeds}
         for f in as_completed(futures, timeout=15):
             try:
                 articles.extend(f.result())
@@ -183,13 +183,12 @@ def refresh_cache():
         def _fetch_one(cat_feeds):
             cat, feeds = cat_feeds
             articles = fetch_category(cat, feeds)
-            # Store immediately without translation so UI loads fast
+            translate_articles(articles)  # translate BEFORE caching
             with cache_lock:
-                cache[cat] = {"articles": articles, "updated": datetime.now(timezone.utc).isoformat()}
-            # Translate in background after storing
-            translate_articles(articles)
+                cache[cat] = {"articles": articles,
+                               "updated": datetime.now(timezone.utc).isoformat()}
 
-        with ThreadPoolExecutor(max_workers=6) as ex:
+        with ThreadPoolExecutor(max_workers=4) as ex:
             list(ex.map(_fetch_one, FEEDS.items()))
         time.sleep(CACHE_TTL)
 
@@ -211,6 +210,7 @@ def category_news(category):
         data = cache.get(category)
     if not data:
         articles = fetch_category(category, FEEDS.get(category, []))
+        translate_articles(articles)
         data = {"articles": articles, "updated": datetime.now(timezone.utc).isoformat()}
         with cache_lock:
             cache[category] = data
@@ -218,18 +218,21 @@ def category_news(category):
 
 
 if __name__ == "__main__":
-    print("טוען חדשות... אנא המתן")
+    print("טוען וּמתרגם חדשות... אנא המתן")
 
     def _initial_load(cat_feeds):
         cat, feeds = cat_feeds
         articles = fetch_category(cat, feeds)
+        translate_articles(articles)  # translate BEFORE storing
         with cache_lock:
-            cache[cat] = {"articles": articles, "updated": datetime.now(timezone.utc).isoformat()}
-        print(f"  ✓ {cat} ({len(articles)} כתבות)")
+            cache[cat] = {"articles": articles,
+                           "updated": datetime.now(timezone.utc).isoformat()}
+        translated = sum(1 for a in articles if not a.get("translate"))
+        print(f"  ✓ {cat} ({len(articles)} כתבות, {translated} מתורגמות)")
 
-    with ThreadPoolExecutor(max_workers=6) as ex:
+    with ThreadPoolExecutor(max_workers=4) as ex:
         list(ex.map(_initial_load, FEEDS.items()))
-    print("כל הקטגוריות נטענו — מפעיל שרת")
+    print("הכל מוכן — מפעיל שרת")
 
     t = threading.Thread(target=refresh_cache, daemon=True)
     t.start()
