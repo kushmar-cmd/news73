@@ -1,3 +1,4 @@
+import re
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from flask import Flask, jsonify, render_template
@@ -6,73 +7,84 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+try:
+    from deep_translator import GoogleTranslator
+    TRANSLATE_AVAILABLE = True
+except ImportError:
+    TRANSLATE_AVAILABLE = False
+
 app = Flask(__name__)
 
+# Sources marked True will have titles/descriptions translated to Hebrew
 FEEDS = {
     "ישראל": [
-        ("Ynet חדשות", "https://www.ynet.co.il/Integration/StoryRss2.xml"),
-        ("Walla חדשות", "https://rss.walla.co.il/feed/1"),
-        ("מאקו N12", "https://www.mako.co.il/rss/news.xml"),
-        ("הארץ", "https://www.haaretz.co.il/cmlink/1.1660017"),
+        ("Ynet חדשות", "https://www.ynet.co.il/Integration/StoryRss2.xml", False),
+        ("Walla חדשות", "https://rss.walla.co.il/feed/1", False),
+        ("כאן חדשות", "https://www.kan.org.il/rss/", False),
+        ("מאקו N12", "https://www.mako.co.il/rss/news.xml", False),
+        ("הארץ", "https://www.haaretz.co.il/cmlink/1.1660017", False),
+        ("ישראל היום", "https://www.israelhayom.co.il/rss.xml", False),
     ],
     "פוליטיקה ישראלית": [
-        ("Ynet פוליטי", "https://www.ynet.co.il/Integration/StoryRss2030.xml"),
-        ("Walla פוליטי", "https://rss.walla.co.il/feed/6"),
-        ("BBC Politics", "http://feeds.bbci.co.uk/news/politics/rss.xml"),
-        ("Politico", "https://www.politico.com/rss/politics08.xml"),
+        ("Ynet פוליטי", "https://www.ynet.co.il/Integration/StoryRss2030.xml", False),
+        ("Walla פוליטי", "https://rss.walla.co.il/feed/6", False),
+        ("BBC Politics", "http://feeds.bbci.co.uk/news/politics/rss.xml", True),
+        ("Politico", "https://www.politico.com/rss/politics08.xml", True),
     ],
     "עולם": [
-        ("BBC World", "http://feeds.bbci.co.uk/news/world/rss.xml"),
-        ("Al Jazeera", "https://www.aljazeera.com/xml/rss/all.xml"),
-        ("Guardian World", "https://www.theguardian.com/world/rss"),
-        ("Ynet עולם", "https://www.ynet.co.il/Integration/StoryRss377.xml"),
+        ("BBC World", "http://feeds.bbci.co.uk/news/world/rss.xml", True),
+        ("Guardian World", "https://www.theguardian.com/world/rss", True),
+        ("Reuters World", "https://feeds.reuters.com/reuters/worldNews", True),
+        ("Ynet עולם", "https://www.ynet.co.il/Integration/StoryRss377.xml", False),
     ],
     "כלכלה": [
-        ("Ynet כלכלה", "https://www.ynet.co.il/Integration/StoryRss3.xml"),
-        ("Walla כלכלה", "https://rss.walla.co.il/feed/2"),
-        ("BBC Business", "http://feeds.bbci.co.uk/news/business/rss.xml"),
-        ("Reuters Business", "https://feeds.reuters.com/reuters/businessNews"),
+        ("Ynet כלכלה", "https://www.ynet.co.il/Integration/StoryRss3.xml", False),
+        ("Walla כלכלה", "https://rss.walla.co.il/feed/2", False),
+        ("גלובס", "https://www.globes.co.il/rss/rss.aspx?f=502", False),
+        ("BBC Business", "http://feeds.bbci.co.uk/news/business/rss.xml", True),
+        ("Reuters Business", "https://feeds.reuters.com/reuters/businessNews", True),
     ],
     "טכנולוגיה": [
-        ("Ynet טכנולוגיה", "https://www.ynet.co.il/Integration/StoryRss542.xml"),
-        ("Walla טכנולוגיה", "https://rss.walla.co.il/feed/4"),
-        ("TechCrunch", "https://techcrunch.com/feed/"),
-        ("The Verge", "https://www.theverge.com/rss/index.xml"),
-        ("Wired", "https://www.wired.com/feed/rss"),
+        ("Ynet טכנולוגיה", "https://www.ynet.co.il/Integration/StoryRss542.xml", False),
+        ("Walla טכנולוגיה", "https://rss.walla.co.il/feed/4", False),
+        ("TechCrunch", "https://techcrunch.com/feed/", True),
+        ("The Verge", "https://www.theverge.com/rss/index.xml", True),
+        ("Wired", "https://www.wired.com/feed/rss", True),
     ],
     "ספורט": [
-        ("Ynet ספורט", "https://www.ynet.co.il/Integration/StoryRss5.xml"),
-        ("Walla ספורט", "https://rss.walla.co.il/feed/3"),
-        ("BBC Sport", "http://feeds.bbci.co.uk/sport/rss.xml"),
-        ("ESPN", "https://www.espn.com/espn/rss/news"),
+        ("Ynet ספורט", "https://www.ynet.co.il/Integration/StoryRss5.xml", False),
+        ("Walla ספורט", "https://rss.walla.co.il/feed/3", False),
+        ("ספורט 5", "https://www.sport5.co.il/rss.aspx", False),
+        ("BBC Sport", "http://feeds.bbci.co.uk/sport/rss.xml", True),
+        ("ESPN", "https://www.espn.com/espn/rss/news", True),
     ],
     "בידור ותרבות": [
-        ("Ynet בידור", "https://www.ynet.co.il/Integration/StoryRss4.xml"),
-        ("Walla בידור", "https://rss.walla.co.il/feed/7"),
-        ("BBC Entertainment", "http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml"),
-        ("Rolling Stone", "https://www.rollingstone.com/feed/"),
+        ("Ynet בידור", "https://www.ynet.co.il/Integration/StoryRss4.xml", False),
+        ("Walla בידור", "https://rss.walla.co.il/feed/7", False),
+        ("BBC Entertainment", "http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml", True),
+        ("Rolling Stone", "https://www.rollingstone.com/feed/", True),
     ],
     "בריאות": [
-        ("Ynet בריאות", "https://www.ynet.co.il/Integration/StoryRss3458.xml"),
-        ("Walla בריאות", "https://rss.walla.co.il/feed/5"),
-        ("BBC Health", "http://feeds.bbci.co.uk/news/health/rss.xml"),
-        ("WHO", "https://www.who.int/rss-feeds/news-releases.xml"),
+        ("Ynet בריאות", "https://www.ynet.co.il/Integration/StoryRss3458.xml", False),
+        ("Walla בריאות", "https://rss.walla.co.il/feed/5", False),
+        ("BBC Health", "http://feeds.bbci.co.uk/news/health/rss.xml", True),
+        ("WHO", "https://www.who.int/rss-feeds/news-releases.xml", True),
     ],
     "מדע וטבע": [
-        ("Ynet מדע", "https://www.ynet.co.il/Integration/StoryRss3462.xml"),
-        ("Science Daily", "https://www.sciencedaily.com/rss/all.xml"),
-        ("NASA", "https://www.nasa.gov/rss/dyn/breaking_news.rss"),
-        ("New Scientist", "https://www.newscientist.com/feed/home/"),
+        ("Ynet מדע", "https://www.ynet.co.il/Integration/StoryRss3462.xml", False),
+        ("Science Daily", "https://www.sciencedaily.com/rss/all.xml", True),
+        ("NASA", "https://www.nasa.gov/rss/dyn/breaking_news.rss", True),
+        ("New Scientist", "https://www.newscientist.com/feed/home/", True),
     ],
     "סביבה ואקלים": [
-        ("BBC Environment", "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml"),
-        ("Guardian Environment", "https://www.theguardian.com/environment/rss"),
-        ("Climate Home News", "https://www.climatechangenews.com/feed/"),
+        ("BBC Environment", "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml", True),
+        ("Guardian Environment", "https://www.theguardian.com/environment/rss", True),
+        ("Climate Home News", "https://www.climatechangenews.com/feed/", True),
     ],
     "חינוך": [
-        ("BBC Education", "http://feeds.bbci.co.uk/news/education/rss.xml"),
-        ("Times Higher Education", "https://www.timeshighereducation.com/news/rss.xml"),
-        ("EdSurge", "https://www.edsurge.com/news.rss"),
+        ("BBC Education", "http://feeds.bbci.co.uk/news/education/rss.xml", True),
+        ("Times Higher Education", "https://www.timeshighereducation.com/news/rss.xml", True),
+        ("EdSurge", "https://www.edsurge.com/news.rss", True),
     ],
 }
 
@@ -80,21 +92,50 @@ cache = {}
 cache_lock = threading.Lock()
 CACHE_TTL = 300  # 5 minutes
 
+_translator = None
+_translator_lock = threading.Lock()
 
-def parse_rss(xml_text, source_name):
+
+def get_translator():
+    global _translator
+    if not TRANSLATE_AVAILABLE:
+        return None
+    with _translator_lock:
+        if _translator is None:
+            try:
+                _translator = GoogleTranslator(source="auto", target="iw")
+            except Exception:
+                pass
+    return _translator
+
+
+def translate_text(text):
+    if not text:
+        return text
+    t = get_translator()
+    if not t:
+        return text
+    try:
+        return t.translate(text[:500]) or text
+    except Exception:
+        return text
+
+
+def parse_rss(xml_text, source_name, do_translate=False):
     items = []
     try:
         root = ET.fromstring(xml_text)
         ns = {"atom": "http://www.w3.org/2005/Atom"}
-        # Standard RSS
         for item in root.findall(".//item")[:8]:
             title = item.findtext("title", "").strip()
             link = item.findtext("link", "").strip()
             desc = item.findtext("description", "").strip()
             pub = item.findtext("pubDate", "").strip()
             if title and link:
+                if do_translate:
+                    title = translate_text(title)
+                    desc = translate_text(_clean(desc)[:300])
                 items.append({"title": title, "link": link, "desc": _clean(desc)[:200], "pub": pub, "source": source_name})
-        # Atom feeds
         if not items:
             for entry in root.findall(".//atom:entry", ns)[:8]:
                 title = entry.findtext("atom:title", "", ns).strip()
@@ -103,6 +144,9 @@ def parse_rss(xml_text, source_name):
                 summary = entry.findtext("atom:summary", "", ns).strip()
                 pub = entry.findtext("atom:updated", "", ns).strip()
                 if title and link:
+                    if do_translate:
+                        title = translate_text(title)
+                        summary = translate_text(_clean(summary)[:300])
                     items.append({"title": title, "link": link, "desc": _clean(summary)[:200], "pub": pub, "source": source_name})
     except Exception:
         pass
@@ -110,19 +154,17 @@ def parse_rss(xml_text, source_name):
 
 
 def _clean(text):
-    import re
     text = re.sub(r"<[^>]+>", "", text)
     return text.strip()
 
 
-def fetch_feed(source_name, url):
+def fetch_feed(source_name, url, do_translate):
     try:
         resp = requests.get(url, timeout=8, headers={"User-Agent": "Mozilla/5.0 (compatible; NewsApp/1.0)"})
         if resp.status_code == 200:
-            # fix encoding for Hebrew sites
             if resp.encoding and resp.encoding.lower() in ("iso-8859-1", "windows-1252"):
                 resp.encoding = resp.apparent_encoding
-            return parse_rss(resp.text, source_name)
+            return parse_rss(resp.text, source_name, do_translate)
     except Exception:
         pass
     return []
@@ -131,8 +173,8 @@ def fetch_feed(source_name, url):
 def fetch_category(category, feeds):
     articles = []
     with ThreadPoolExecutor(max_workers=6) as ex:
-        futures = {ex.submit(fetch_feed, name, url): name for name, url in feeds}
-        for f in as_completed(futures, timeout=12):
+        futures = {ex.submit(fetch_feed, name, url, translate): name for name, url, translate in feeds}
+        for f in as_completed(futures, timeout=15):
             try:
                 articles.extend(f.result())
             except Exception:
