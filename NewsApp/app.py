@@ -33,7 +33,6 @@ FEEDS = {
         ("Reuters World", "https://feeds.reuters.com/reuters/worldNews", True),
     ],
     "כלכלה": [
-        ("Ynet כלכלה", "https://www.ynet.co.il/Integration/StoryRss3.xml", False),
         ("Walla כלכלה", "https://rss.walla.co.il/feed/3", False),
         ("גלובס כלכלה", "https://www.globes.co.il/rss/rss.aspx?f=502", False),
         ("גלובס שוק ההון", "https://www.globes.co.il/rss/rss.aspx?f=561", False),
@@ -42,21 +41,18 @@ FEEDS = {
         ("Reuters Business", "https://feeds.reuters.com/reuters/businessNews", True),
     ],
     "טכנולוגיה": [
-        ("Ynet טכנולוגיה", "https://www.ynet.co.il/Integration/StoryRss542.xml", False),
         ("Walla טכנולוגיה", "https://rss.walla.co.il/feed/4", False),
         ("TechCrunch", "https://techcrunch.com/feed/", True),
         ("The Verge", "https://www.theverge.com/rss/index.xml", True),
         ("Wired", "https://www.wired.com/feed/rss", True),
     ],
     "ספורט": [
-        ("Ynet ספורט", "https://www.ynet.co.il/Integration/StoryRss5.xml", False),
         ("Walla ספורט", "https://rss.walla.co.il/feed/7", False),
         ("ספורט 5", "https://www.sport5.co.il/rss.aspx", False),
         ("BBC Sport", "http://feeds.bbci.co.uk/sport/rss.xml", True),
         ("ESPN", "https://www.espn.com/espn/rss/news", True),
     ],
     "בידור ותרבות": [
-        ("Ynet בידור", "https://www.ynet.co.il/Integration/StoryRss4.xml", False),
         ("BBC Entertainment", "http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml", True),
         ("Rolling Stone", "https://www.rollingstone.com/feed/", True),
     ],
@@ -66,7 +62,6 @@ FEEDS = {
         ("WebMD", "https://rss.webmd.com/rss/rss.aspx?RSSSource=RSS_PUBLIC", True),
     ],
     "מדע וטבע": [
-        ("Ynet מדע", "https://www.ynet.co.il/Integration/StoryRss3462.xml", False),
         ("Science Daily", "https://www.sciencedaily.com/rss/all.xml", True),
         ("NASA", "https://www.nasa.gov/rss/dyn/breaking_news.rss", True),
         ("New Scientist", "https://www.newscientist.com/feed/home/", True),
