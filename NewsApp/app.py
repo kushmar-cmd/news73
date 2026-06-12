@@ -27,16 +27,18 @@ FEEDS = {
         ("ישראל היום", "https://www.israelhayom.co.il/rss.xml", False),
     ],
     "פוליטיקה ישראלית": [
-        ("Ynet פוליטי", "https://www.ynet.co.il/Integration/StoryRss2030.xml", False),
+        ("Ynet חדשות", "https://www.ynet.co.il/Integration/StoryRss2.xml", False),
+        ("ישראל היום", "https://www.israelhayom.co.il/rss.xml", False),
+        ("הארץ", "https://www.haaretz.co.il/cmlink/1.1660017", False),
         ("BBC Politics", "http://feeds.bbci.co.uk/news/politics/rss.xml", True),
         ("Politico", "https://www.politico.com/rss/politics08.xml", True),
     ],
     "עולם": [
         ("Walla עולם", "https://rss.walla.co.il/feed/2", False),
+        ("Ynet חדשות", "https://www.ynet.co.il/Integration/StoryRss2.xml", False),
         ("BBC World", "http://feeds.bbci.co.uk/news/world/rss.xml", True),
         ("Guardian World", "https://www.theguardian.com/world/rss", True),
         ("Reuters World", "https://feeds.reuters.com/reuters/worldNews", True),
-        ("Ynet עולם", "https://www.ynet.co.il/Integration/StoryRss377.xml", False),
     ],
     "כלכלה": [
         ("Ynet כלכלה", "https://www.ynet.co.il/Integration/StoryRss3.xml", False),
@@ -63,24 +65,27 @@ FEEDS = {
     ],
     "בידור ותרבות": [
         ("Ynet בידור", "https://www.ynet.co.il/Integration/StoryRss4.xml", False),
+        ("Walla בידור", "https://rss.walla.co.il/feed/1", False),
         ("BBC Entertainment", "http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml", True),
         ("Rolling Stone", "https://www.rollingstone.com/feed/", True),
     ],
     "בריאות": [
         ("Ynet בריאות", "https://www.ynet.co.il/Integration/StoryRss3458.xml", False),
+        ("כאן בריאות", "https://www.kan.org.il/rss/", False),
         ("BBC Health", "http://feeds.bbci.co.uk/news/health/rss.xml", True),
         ("WHO", "https://www.who.int/rss-feeds/news-releases.xml", True),
     ],
     "מדע וטבע": [
         ("Ynet מדע", "https://www.ynet.co.il/Integration/StoryRss3462.xml", False),
+        ("כאן מדע", "https://www.kan.org.il/rss/", False),
         ("Science Daily", "https://www.sciencedaily.com/rss/all.xml", True),
         ("NASA", "https://www.nasa.gov/rss/dyn/breaking_news.rss", True),
         ("New Scientist", "https://www.newscientist.com/feed/home/", True),
     ],
     "סביבה ואקלים": [
+        ("Ynet סביבה", "https://www.ynet.co.il/Integration/StoryRss2.xml", False),
         ("BBC Environment", "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml", True),
         ("Guardian Environment", "https://www.theguardian.com/environment/rss", True),
-        ("Reuters Environment", "https://feeds.reuters.com/reuters/environment", True),
         ("Yale Environment", "https://e360.yale.edu/feed", True),
     ],
     "חינוך": [
