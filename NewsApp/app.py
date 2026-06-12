@@ -233,6 +233,19 @@ def category_news(category):
 
 
 if __name__ == "__main__":
+    print("טוען חדשות... אנא המתן")
+
+    def _initial_load(cat_feeds):
+        cat, feeds = cat_feeds
+        articles = fetch_category(cat, feeds)
+        with cache_lock:
+            cache[cat] = {"articles": articles, "updated": datetime.now(timezone.utc).isoformat()}
+        print(f"  ✓ {cat} ({len(articles)} כתבות)")
+
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        list(ex.map(_initial_load, FEEDS.items()))
+    print("כל הקטגוריות נטענו — מפעיל שרת")
+
     t = threading.Thread(target=refresh_cache, daemon=True)
     t.start()
     port = int(os.environ.get("PORT", 5000))
