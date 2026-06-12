@@ -126,31 +126,38 @@ def parse_rss(xml_text, source_name, do_translate=False):
     try:
         root = ET.fromstring(xml_text)
         ns = {"atom": "http://www.w3.org/2005/Atom"}
-        for item in root.findall(".//item")[:8]:
+        for item in root.findall(".//item")[:6]:
             title = item.findtext("title", "").strip()
             link = item.findtext("link", "").strip()
-            desc = item.findtext("description", "").strip()
+            desc = _clean(item.findtext("description", "").strip())[:200]
             pub = item.findtext("pubDate", "").strip()
             if title and link:
-                if do_translate:
-                    title = translate_text(title)
-                    desc = translate_text(_clean(desc)[:300])
-                items.append({"title": title, "link": link, "desc": _clean(desc)[:200], "pub": pub, "source": source_name})
+                items.append({"title": title, "link": link, "desc": desc, "pub": pub,
+                              "source": source_name, "translate": do_translate})
         if not items:
-            for entry in root.findall(".//atom:entry", ns)[:8]:
+            for entry in root.findall(".//atom:entry", ns)[:6]:
                 title = entry.findtext("atom:title", "", ns).strip()
                 link_el = entry.find("atom:link", ns)
                 link = link_el.get("href", "") if link_el is not None else ""
-                summary = entry.findtext("atom:summary", "", ns).strip()
+                summary = _clean(entry.findtext("atom:summary", "", ns).strip())[:200]
                 pub = entry.findtext("atom:updated", "", ns).strip()
                 if title and link:
-                    if do_translate:
-                        title = translate_text(title)
-                        summary = translate_text(_clean(summary)[:300])
-                    items.append({"title": title, "link": link, "desc": _clean(summary)[:200], "pub": pub, "source": source_name})
+                    items.append({"title": title, "link": link, "desc": summary, "pub": pub,
+                                  "source": source_name, "translate": do_translate})
     except Exception:
         pass
     return items
+
+
+def translate_articles(articles):
+    """Translate titles of English articles in a background thread."""
+    t = get_translator()
+    if not t:
+        return
+    for a in articles:
+        if a.get("translate"):
+            a["title"] = translate_text(a["title"])
+            a["translate"] = False
 
 
 def _clean(text):
@@ -187,10 +194,13 @@ def refresh_cache():
         def _fetch_one(cat_feeds):
             cat, feeds = cat_feeds
             articles = fetch_category(cat, feeds)
+            # Store immediately without translation so UI loads fast
             with cache_lock:
                 cache[cat] = {"articles": articles, "updated": datetime.now(timezone.utc).isoformat()}
+            # Translate in background after storing
+            translate_articles(articles)
 
-        with ThreadPoolExecutor(max_workers=4) as ex:
+        with ThreadPoolExecutor(max_workers=6) as ex:
             list(ex.map(_fetch_one, FEEDS.items()))
         time.sleep(CACHE_TTL)
 
