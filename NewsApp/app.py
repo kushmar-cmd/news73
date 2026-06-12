@@ -70,8 +70,8 @@ FEEDS = {
         ("Rolling Stone", "https://www.rollingstone.com/feed/", True),
     ],
     "בריאות": [
-        ("Ynet בריאות", "https://www.ynet.co.il/Integration/StoryRss3458.xml", False),
-        ("כאן בריאות", "https://www.kan.org.il/rss/", False),
+        ("Ynet חדשות", "https://www.ynet.co.il/Integration/StoryRss2.xml", False),
+        ("ישראל היום", "https://www.israelhayom.co.il/rss.xml", False),
         ("BBC Health", "http://feeds.bbci.co.uk/news/health/rss.xml", True),
         ("WHO", "https://www.who.int/rss-feeds/news-releases.xml", True),
     ],
@@ -89,8 +89,8 @@ FEEDS = {
         ("Yale Environment", "https://e360.yale.edu/feed", True),
     ],
     "חינוך": [
-        ("כאן חינוך", "https://www.kan.org.il/rss/?catid=4", False),
-        ("Ynet חינוך", "https://www.ynet.co.il/Integration/StoryRss3459.xml", False),
+        ("Ynet חדשות", "https://www.ynet.co.il/Integration/StoryRss2.xml", False),
+        ("הארץ", "https://www.haaretz.co.il/cmlink/1.1660017", False),
         ("BBC Education", "http://feeds.bbci.co.uk/news/education/rss.xml", True),
         ("Times Higher Education", "https://www.timeshighereducation.com/news/rss.xml", True),
         ("EdSurge", "https://www.edsurge.com/news.rss", True),
@@ -112,7 +112,7 @@ def get_translator():
     with _translator_lock:
         if _translator is None:
             try:
-                _translator = GoogleTranslator(source="auto", target="iw")
+                _translator = GoogleTranslator(source="auto", target="he")
             except Exception:
                 pass
     return _translator
